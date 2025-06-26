@@ -40,6 +40,11 @@
 // ====================================================
 // ✅ Udemy AI Bookmarklet Tool – ORIGINAL (unchanged)
 // ====================================================
+// ✅ Udemy AI Bookmarklet Tool – FINAL VERSION
+// Features: Analysis, Chat, Project Suggestions, Quiz (with realistic MCQs)
+// Use with Bookmarklet:
+// javascript:(function(){var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/gh/Shantnu-Talokar/Mama-Developer/script.js?t='+Date.now();document.body.appendChild(s);})();
+
 (function () {
     if (document.getElementById('udemyAnalyzerBtn')) return;
     if (!location.hostname.includes('udemy.com')) return alert('⚠️ Open this on a Udemy course page.');
@@ -165,29 +170,34 @@
 
                 const projBtn = document.createElement('button');
                 projBtn.textContent = '🎯 Suggest Projects';
-                projBtn.style.cssText = 'margin-top:10px;padding:6px 12px;border:none;background:#28a745;color:white;border-radius:4px;cursor:pointer;';
+                projBtn.style.cssText =
+                    'margin-top:10px;padding:6px 12px;border:none;background:#28a745;color:white;border-radius:4px;cursor:pointer;';
                 projBtn.onclick = async () => {
-                    const sel = mods.filter((_, i) => localStorage.getItem('udemyMod-' + i) === '1')
-                                     .map(m => m.innerText.trim());
+                    const sel = mods
+                        .filter((_, i) => localStorage.getItem('udemyMod-' + i) === '1')
+                        .map(m => m.innerText.trim());
+
                     if (!sel.length) return alert('Select modules first.');
 
                     let ideasDiv = document.getElementById('projectIdeasBox');
                     if (!ideasDiv) {
                         ideasDiv = document.createElement('div');
-                        ideasDiv.id  = 'projectIdeasBox';
+                        ideasDiv.id = 'projectIdeasBox';
                         modulesArea.appendChild(ideasDiv);
                     }
+
                     ideasDiv.innerHTML = '<b>⏳ Fetching ideas…</b>';
 
                     const ideas = await cohereQuery(
                         `I completed these modules:\n\n${sel.join('\n')}\n\nSuggest three hands-on project ideas.`,
                         350
                     );
+
                     ideasDiv.innerHTML = '<b>🚀 Project Ideas:</b><br>' + ideas.replace(/\n/g, '<br>');
                 };
+
                 modulesArea.appendChild(projBtn);
 
-                // 🔥 QUIZ BUTTON
                 const quizBtn = document.createElement('button');
                 quizBtn.textContent = '📝 Quiz Me';
                 quizBtn.style.cssText =
@@ -206,22 +216,18 @@
                 }
 
                 quizBtn.onclick = async () => {
-                    const sel = mods.filter((_, i) => localStorage.getItem('udemyMod-' + i) === '1')
-                                     .map(m => m.innerText.trim());
-                    if (!sel.length) return alert('Select modules first.');
+                    const chosen = mods
+                        .filter((_, i) => localStorage.getItem('udemyMod-' + i) === '1')
+                        .map(m => m.innerText.trim());
 
-                    let quizDiv = document.getElementById('quizOutputBox');
-                    if (!quizDiv) {
-                        quizDiv = document.createElement('div');
-                        quizDiv.id = 'quizOutputBox';
-                        modulesArea.appendChild(quizDiv);
-                    }
-                    quizDiv.innerHTML = '<h2>📝 Generating quiz…</h2>';
+                    if (!chosen.length) return alert('Select modules first.');
+
+                    overlay.innerHTML = '<h2>📝 Generating quiz…</h2>';
 
                     const qPrompt =
                         `You are an advanced technical course quiz generator.\n` +
                         `Generate EXACTLY 5 high-quality multiple-choice questions (MCQs) based strictly on the technical content from these modules:\n` +
-                        `${sel.join('\n')}\n\n` +
+                        `${chosen.join('\n')}\n\n` +
                         `Guidelines:\n` +
                         `1. Questions must cover a range of difficulty levels: 2 easy, 2 medium, and 1 hard.\n` +
                         `2. Only include content that is clearly present in the modules.\n` +
@@ -234,12 +240,15 @@
 
                     try {
                         const txt = await cohereQuery(qPrompt, 650);
+                        overlay.style.display = 'block';
                         overlay.innerHTML =
-                          '<button id="closeQuiz" style="position:absolute;top:15px;right:20px;font-size:20px;background:#f44336;color:white;border:none;border-radius:4px;padding:4px 12px;cursor:pointer;">✖</button>' +
-                          '<h2 style="text-align:center;margin:10px 0 20px">📝 Module Quiz</h2>' +
-                          '<form id="quizForm" style="font-size:16px;line-height:1.6"></form>' +
-                          '<button id="submitQuiz" style="margin-top:25px;display:block;background:#4caf50;color:white;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;margin-left:auto;margin-right:auto;">Show Answers</button>' +
-                          '<div id="scoreBox" style="text-align:center;font-size:18px;margin-top:15px;font-weight:bold;"></div>';
+                            '<button id="closeQuiz" style="position:absolute;top:15px;right:20px;font-size:20px;' +
+                            'background:#f44336;color:white;border:none;border-radius:4px;padding:4px 12px;cursor:pointer;">✖</button>' +
+                            '<h2 style="text-align:center;margin:10px 0 20px">📝 Module Quiz</h2>' +
+                            '<form id="quizForm" style="font-size:16px;line-height:1.6"></form>' +
+                            '<button id="submitQuiz" style="margin-top:25px;display:block;background:#4caf50;color:white;' +
+                            'border:none;padding:10px 20px;border-radius:6px;cursor:pointer;margin-left:auto;margin-right:auto;">Show Answers</button>' +
+                            '<div id="scoreBox" style="text-align:center;font-size:18px;margin-top:15px;font-weight:bold;"></div>';
 
                         document.getElementById('closeQuiz').onclick = () => (overlay.style.display = 'none');
                         const form = overlay.querySelector('#quizForm');
@@ -257,7 +266,6 @@
                                 const text = line.replace(/<span class=["']answer["']>/, '').replace('</span>', '').replace(/^[A-Da-d][).]\s*/, '').trim();
                                 return { text, isCorrect };
                             });
-                            // shuffle options
                             for (let i = options.length - 1; i > 0; i--) {
                                 const j = Math.floor(Math.random() * (i + 1));
                                 [options[i], options[j]] = [options[j], options[i]];
@@ -300,7 +308,6 @@
                             const pct = Math.round((right / correctMap.length) * 100);
                             overlay.querySelector('#scoreBox').textContent = `🎯 You scored ${right}/${correctMap.length} (${pct}%)`;
                         };
-                        overlay.style.display = 'block';
                     } catch (err) {
                         overlay.innerHTML = '<p style="color:red;text-align:center">❌ Failed to generate quiz.</p>';
                     }
