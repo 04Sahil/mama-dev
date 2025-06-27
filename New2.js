@@ -343,6 +343,7 @@
                                 }
                             });
                             const pct = Math.round((right / correctMap.length) * 100);
+                            addTokens(right);
                             overlay.querySelector('#scoreBox').textContent = `🎯 You scored ${right}/${correctMap.length} (${pct}%)`;
                         };
                     } catch (err) {
@@ -395,7 +396,7 @@
                 modulesArea.appendChild(memeBtn);
 
                 memeBtn.onclick = async () => {
-                    if (tokenPoints <= 0) {
+                    if (tokenPoints <= 4) {
                         alert('❌ Not enough meme tokens! Earn more by quizzes or the daily question.');
                         return;
                     }
@@ -443,7 +444,7 @@
                     pop.innerHTML = `<strong>🎉 Meme Unlocked!</strong><br><img src="${memeJson.data.url}" style="max-width:100%;border-radius:6px;margin-top:10px"/><br><button style="margin-top:8px;padding:4px 10px;border:none;background:#f44336;color:#fff;border-radius:4px;cursor:pointer;">Close</button>`;
                     pop.querySelector("button").onclick = () => pop.remove();
                     document.body.appendChild(pop);
-                    addTokens(-1); // spend token after successful generation
+                    addTokens(-5); // spend token after successful generation
                 };
 
             };
@@ -595,8 +596,10 @@ Use real aptitude style, medium difficulty.
                         options: oMatch.map((l, i) => ({
                             text: l.replace(/^[A-D]\)\s*/, '').trim(),
                             isCorrect: 'ABCD'[i] === aMatch[1].toUpperCase()
+                           
                         }))
                     };
+                     if(isCorrect===true) addTokens(10);
 
                     // cache for 24 h
                     localStorage.setItem(qKey, JSON.stringify(qBlock));
