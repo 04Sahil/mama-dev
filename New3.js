@@ -91,7 +91,6 @@
     }
     updateTokenUI();  // run once at startup
     setTimeout(updateTokenUI, 0);  // run again after buttons are loaded
-    addTokens(10);
 
     const panel = document.createElement('div');
     panel.id = 'udemyAnalysisPanel';
@@ -457,9 +456,18 @@
             modulesArea.appendChild(dqBtn);
 
             dqBtn.onclick = async () => {
-                const today = new Date().toISOString().slice(0, 10);          // "YYYY-MM-DD"
+                const today = new Date().toISOString().slice(0, 10); // "YYYY-MM-DD"
                 const qKey = 'dailyQ-data';
                 const dKey = 'dailyQ-date';
+                const aKey = 'dailyQ-done';
+
+                // ✅ Disable btn if already done
+                if (localStorage.getItem(aKey) === today) {
+                    dqBtn.disabled = true;
+                    dqBtn.style.background = '#ccc';
+                    dqBtn.textContent = '✅ Attempted';
+                    return;
+                }
 
                 // helper to render the stored or freshly fetched question
                 const renderQuestion = (qBlock) => {
@@ -474,32 +482,30 @@
                             'border:5px solid #3f51b5;border-radius:14px;z-index:10000;box-shadow:0 10px 25px rgba(0,0,0,.35);' +
                             'font-family:sans-serif;';
                         dqOver.innerHTML = `
-              <button style="position:absolute;top:8px;right:12px;font-size:16px;border:none;background:#f44336;
-                      color:white;padding:4px 10px;border-radius:4px;cursor:pointer;"
-                      onclick="this.parentElement.remove()">✖</button>
-              <h3 style="margin-bottom:12px">🗓️ Daily Aptitude Question</h3>
-              <div id="dqTimer" style="font-size:15px;font-weight:bold;margin-bottom:10px;"></div>
-              <form id="dqForm" style="width:100%;font-size:15px;line-height:1.6;"></form>
-              <button id="dqSubmit" style="margin-top:15px;padding:8px 16px;background:#4caf50;color:white;
-                      border:none;border-radius:5px;cursor:pointer;">Submit</button>
-              <div id="dqResult" style="margin-top:14px;font-weight:bold;text-align:center;"></div>
+                <button style="position:absolute;top:8px;right:12px;font-size:16px;border:none;background:#f44336;
+                        color:white;padding:4px 10px;border-radius:4px;cursor:pointer;"
+                        onclick="this.parentElement.remove()">✖</button>
+                <h3 style="margin-bottom:12px">🗓️ Daily Aptitude Question</h3>
+                <div id="dqTimer" style="font-size:15px;font-weight:bold;margin-bottom:10px;"></div>
+                <form id="dqForm" style="width:100%;font-size:15px;line-height:1.6;"></form>
+                <button id="dqSubmit" style="margin-top:15px;padding:8px 16px;background:#4caf50;color:white;
+                        border:none;border-radius:5px;cursor:pointer;">Submit</button>
+                <div id="dqResult" style="margin-top:14px;font-weight:bold;text-align:center;"></div>
             `;
                         document.body.appendChild(dqOver);
                     }
 
                     // fill form
                     const form = dqOver.querySelector('#dqForm');
-                    form.innerHTML = '';                               // clear any previous
+                    form.innerHTML = '';
                     const { question, options } = qBlock;
                     const correctIdx = options.findIndex(o => o.isCorrect);
 
-                    // question text
                     const qEl = document.createElement('div');
                     qEl.style.fontWeight = 'bold';
                     qEl.textContent = question;
                     form.appendChild(qEl);
 
-                    // options
                     options.forEach((opt, i) => {
                         const id = `dqo${i}`;
                         const wrap = document.createElement('label');
@@ -509,22 +515,20 @@
                         form.appendChild(wrap);
                     });
 
-                    // 2-minute countdown
-                    let timeLeft = 120; // seconds
+                    let timeLeft = 120;
                     const timerBox = dqOver.querySelector('#dqTimer');
                     timerBox.textContent = `⏳ Time left: 2:00`;
                     const tick = setInterval(() => {
                         --timeLeft;
-                        const min = Math.floor(timeLeft / 60).toString().padStart(1, '0');
+                        const min = Math.floor(timeLeft / 60).toString();
                         const sec = (timeLeft % 60).toString().padStart(2, '0');
                         timerBox.textContent = `⏳ Time left: ${min}:${sec}`;
                         if (timeLeft <= 0) {
                             clearInterval(tick);
-                            dqOver.querySelector('#dqSubmit').click();           // auto-submit
+                            dqOver.querySelector('#dqSubmit').click();
                         }
                     }, 1000);
 
-                    // submit logic
                     dqOver.querySelector('#dqSubmit').onclick = () => {
                         clearInterval(tick);
                         const chosen = form.querySelector('input[name="dq"]:checked');
@@ -537,31 +541,28 @@
                         if (idx === correctIdx) {
                             resBox.textContent = '✅ Correct!';
                             resBox.style.color = '#2e7d32';
+                            addTokens(10); // ✅ reward tokens
                         } else {
                             resBox.textContent = `❌ Wrong. Correct answer: ${options[correctIdx].text}`;
                             resBox.style.color = '#c62828';
                         }
-                        // disable further interaction
                         dqOver.querySelectorAll('input').forEach(inp => inp.disabled = true);
                         dqOver.querySelector('#dqSubmit').disabled = true;
+
+                        // ✅ Mark as attempted
+                        localStorage.setItem(aKey, today);
+                        dqBtn.disabled = true;
+                        dqBtn.style.background = '#ccc';
+                        dqBtn.textContent = '✅ Attempted';
                     };
                 };
 
-                // if we already generated today, reuse it
                 if (localStorage.getItem(dKey) === today) {
                     const stored = JSON.parse(localStorage.getItem(qKey) || '{}');
                     return renderQuestion(stored);
                 }
 
-                // allow only ONE generate per 24 h
-                if (localStorage.getItem(dKey) && localStorage.getItem(dKey) !== today) {
-                    alert('⏳ Come back tomorrow for the new daily question!');
-                    return;
-                }
-
-                // ── Fetch from Cohere ─────────────────────────────────────────
                 try {
-                    // UI hint while waiting
                     dqBtn.textContent = '⏳ Creating…';
                     dqBtn.disabled = true;
 
@@ -583,7 +584,6 @@ Use real aptitude style, medium difficulty.
                     dqBtn.textContent = '🗓️ Daily Question';
                     dqBtn.disabled = false;
 
-                    // basic parse
                     const qMatch = raw.match(/^Q\)?\s*(.*)$/im);
                     const oMatch = raw.match(/^[A-D]\).*/gim);
                     const aMatch = raw.match(/Answer:\s*([A-D])/i);
@@ -596,16 +596,12 @@ Use real aptitude style, medium difficulty.
                         options: oMatch.map((l, i) => ({
                             text: l.replace(/^[A-D]\)\s*/, '').trim(),
                             isCorrect: 'ABCD'[i] === aMatch[1].toUpperCase()
-                           
                         }))
                     };
-                     if(isCorrect===true) addTokens(10);
 
-                    // cache for 24 h
                     localStorage.setItem(qKey, JSON.stringify(qBlock));
                     localStorage.setItem(dKey, today);
 
-                    // show
                     renderQuestion(qBlock);
                 } catch (err) {
                     dqBtn.textContent = '🗓️ Daily Question';
@@ -614,6 +610,7 @@ Use real aptitude style, medium difficulty.
                     alert('❌ Error generating daily question – see console.');
                 }
             };
+
 
         } catch (err) {
             panel.innerHTML = '❌ Error. See console.';
