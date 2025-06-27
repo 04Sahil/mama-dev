@@ -1,5 +1,5 @@
 // ====================================================
-// 🔌 Sentiment-Analysis Integration (unchanged)
+// Sentiment-Analysis Integration (unchanged)
 // ====================================================
 (async () => {
     const API = "http://localhost:8000";
@@ -394,10 +394,13 @@
                 
                 const response = await cohereQuery(input.value);
                 reply.innerHTML = `
-                    <div style="background:#f9f9f9;padding:12px;border-radius:${styles.borderRadius};border-left:4px solid ${styles.secondaryColor};">
+                     <div id="chatAnswerBox" style="background:#f9f9f9;padding:12px 32px 12px 12px;position:relative;border-radius:${styles.borderRadius};border-left:4px solid ${styles.secondaryColor};">
+                        <button id="closeChatAnswer" style="position:absolute;top:8px;right:8px;background:none;border:none;font-size:16px;cursor:pointer;color:#888;">✖</button>
                         ${response.replace(/\n/g, '<br>')}
                     </div>
                 `;
+                const closeBtn = reply.querySelector('#closeChatAnswer');
+                if (closeBtn) closeBtn.onclick = () => reply.innerHTML = '';
             };
             
             suggestBtn.onclick = async () => {
