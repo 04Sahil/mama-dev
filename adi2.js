@@ -399,59 +399,57 @@
                         alert('❌ Not enough meme tokens! Earn more by quizzes or the daily question.');
                         return;
                     }
-
+                 
                     const topic = document.querySelector("h1").textContent.trim();
-                  const prompt = `
-You're a professional meme caption writer.
+                    
+                  // 1️⃣  keep ONE random template & its readable name
+const templateId = getRandomTemplate();
+const templateNameMap = {
+  "181913649":"Woman Yelling at Cat",
+  "112126428":"Distracted Boyfriend",
+  "87743020":"Two Buttons",
+  // …add the ones you care about
+};
+const templateName = templateNameMap[templateId] ?? "Generic 2-line";
 
-Task:
-Write a meme for the "${getRandomTemplate()}" template.
-Topic: "${topic}"
+// 2️⃣  template-aware prompt on ONE line with \n breaks
+const prompt = `You're a professional meme caption writer.\nTemplate: "${templateName}"\nTopic: "${topic}".\nWrite exactly two short, related lines that match the visual logic of this template and are funny.\nFormat:\nTop: <text>\nBottom: <text>`;
 
-Rules:
-- You must understand the format of the template.
-- The joke must clearly match both the topic AND the visual story of the template.
-- Use exactly 2 lines:
-  Top: Setup (shown on top of the meme image)
-  Bottom: Punchline or reaction (shown at bottom)
+// 3️⃣  call Cohere once, ask it to STOP after “Bottom:”
+const resp = await fetch("https://api.cohere.ai/v1/generate",{
+  method:"POST",
+  headers:{
+    "Authorization":"Bearer zXH8KUSA3ncfZcxvIAZx5boAlGlTirN6LJmp706Q",
+    "Content-Type":"application/json"
+  },
+  body:JSON.stringify({
+    model:"command",
+    prompt,
+    max_tokens:24,          // 2 short lines ≈ 20 tokens
+    temperature:0.65,       // less random, still witty
+    stop_sequences:["Bottom:"]
+  })
+});
+const raw = (await resp.json()).generations?.[0]?.text ?? "";
+const [topLine="",bottomLine=""] = raw
+  .split("\n")
+  .filter(l=>l.trim())
+  .map(l=>l.replace(/^Top:|^Bottom:/i,"").trim());
 
-Examples:
-Template: "Distracted Boyfriend"
-Topic: Studying
-Top: Me trying to focus on homework
-Bottom: That one random Wikipedia article
+// 4️⃣  abort if Cohere didn’t give both lines
+if(!topLine || !bottomLine){
+  alert("⚠️ Couldn't craft a proper caption. Try again!");
+  return;
+}
 
-Template: "Two Buttons"
-Topic: Coding
-Top: Fix the bug
-Bottom: Add a hacky workaround
+// 5️⃣  use SAME template ID when hitting Imgflip
+const form = new URLSearchParams();
+form.append("template_id",templateId);
+form.append("username","SHANTNUTALOKAR");
+form.append("password","Sahil@9043");
+form.append("text0",topLine);
+form.append("text1",bottomLine);
 
-Now generate one for:
-Template: "${getRandomTemplate()}"
-Topic: "${topic}"
-
-Format:
-Top: <text>
-Bottom: <text>`;
-                    const resp = await fetch("https://api.cohere.ai/v1/generate", {
-                        method: "POST",
-                        headers: {
-                            "Authorization": "Bearer zXH8KUSA3ncfZcxvIAZx5boAlGlTirN6LJmp706Q",
-                            "Content-Type": "application/json"
-                        },
-                        body: JSON.stringify({ model: "command", prompt, max_tokens: 50, temperature: 0.9 })
-                    });
-                    const json = await resp.json();
-                    const lines = json.generations?.[0]?.text?.split("\n") || [];
-                    const text0 = lines.find(l => l.startsWith("Top:"))?.replace("Top:", "").trim() || "Debugging for hours";
-                    const text1 = lines.find(l => l.startsWith("Bottom:"))?.replace("Bottom:", "").trim() || "Then it was a semicolon 😭";
-
-                    const form = new URLSearchParams();
-                    form.append("template_id", getRandomTemplate());
-                    form.append("username", "SHANTNUTALOKAR");
-                    form.append("password", "Sahil@9043");
-                    form.append("text0", text0);
-                    form.append("text1", text1);
                     const imgRes = await fetch("https://api.imgflip.com/caption_image", { method: "POST", body: form });
                     const memeJson = await imgRes.json();
                     if (!memeJson.success) return alert("❌ Imgflip error: " + memeJson.error_message);
