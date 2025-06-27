@@ -92,7 +92,7 @@
     updateTokenUI();  // run once at startup
     setTimeout(updateTokenUI, 0);  // run again after buttons are loaded
     addTokens(10);
-    
+
     const panel = document.createElement('div');
     panel.id = 'udemyAnalysisPanel';
     panel.style.cssText =
@@ -443,8 +443,8 @@
                     pop.innerHTML = `<strong>🎉 Meme Unlocked!</strong><br><img src="${memeJson.data.url}" style="max-width:100%;border-radius:6px;margin-top:10px"/><br><button style="margin-top:8px;padding:4px 10px;border:none;background:#f44336;color:#fff;border-radius:4px;cursor:pointer;">Close</button>`;
                     pop.querySelector("button").onclick = () => pop.remove();
                     document.body.appendChild(pop);
+                    addTokens(-1); // spend token after successful generation
                 };
-                addTokens(-1); // spend token after successful generation
 
             };
             // 🗓️ DAILY QUESTION  ─────────────────────────────────────────────
