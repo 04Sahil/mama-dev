@@ -405,7 +405,7 @@
 You're a professional meme caption writer.
 
 Task:
-Write a meme for the "${template}" template.
+Write a meme for the "${getRandomTemplate()}" template.
 Topic: "${topic}"
 
 Rules:
@@ -427,7 +427,7 @@ Top: Fix the bug
 Bottom: Add a hacky workaround
 
 Now generate one for:
-Template: "${template}"
+Template: "${getRandomTemplate()}"
 Topic: "${topic}"
 
 Format:
