@@ -354,20 +354,8 @@
                 const memeBtn = document.createElement("button");
                 memeBtn.id = "udemyMemeBtn";
                 memeBtn.textContent = "🎭 Show Me a Meme";
-                memeBtn.style.cssText = `
-    position: fixed;
-    bottom: 100px;
-    right: 20px;
-    z-index: 10001;
-    padding: 10px 15px;
-    background: #2c2c2c;
-    color: #fff;
-    border: none;
-    border-radius: 8px;
-    font-size: 14px;
-    cursor: pointer;
-    box-shadow: 0 0 10px rgba(0,0,0,.35);
-  `;
+                memeBtn.style.cssText = 'margin-top:10px;margin-left:8px;padding:6px 12px;border:none;background:#9c27b0;color:white;border-radius:4px;cursor:pointer;';
+                modulesArea.appendChild(memeBtn);
 
                 memeBtn.onclick = async () => {
                     const topic = document.querySelector("h1").textContent.trim();
