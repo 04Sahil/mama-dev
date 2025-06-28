@@ -8,7 +8,7 @@
         alert('⚠️ Open this on a Udemy course page.');
         return;
     }
-
+     addTokens(97);
     /*************************************************
      *  🪙 TOKEN MANAGER (unchanged)
      *************************************************/
