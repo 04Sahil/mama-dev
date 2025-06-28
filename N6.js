@@ -63,7 +63,7 @@ javascript:(function(){
         <span>${streakData.xp}/${streakData.level * 100} XP</span>
       </div>
       <div style="height:6px; background:#f0f0f0; border-radius:3px; overflow:hidden;">
-        <div style="width:${Math.min(100, (streakData.xp / (streakData.level * 100)) * 100}%; height:100%; background:linear-gradient(90deg,#FF6B00,#FFA800); transition:width 0.5s;"></div>
+        <div style="width:${Math.min(100, (streakData.xp / (streakData.level * 100)) * 100)}%; height:100%; background:linear-gradient(90deg,#FF6B00,#FFA800); transition:width 0.5s;"></div>
       </div>
     </div>
     
